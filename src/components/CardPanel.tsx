@@ -1,10 +1,22 @@
 'use client'
 import { mock } from 'node:test'
 import Card from './Card'
-import { useReducer } from 'react'
+import { useReducer, useState } from 'react'
 import Link from 'next/link'
+import getVenues from '@/libs/getVenues'
+import {useRef , useEffect} from 'react'
+import { VenueJson , VenueItem } from '../../interface'
 
-export default function CarPanel(){
+export default function CardPanel(){
+    const [venueResponse,setVenueResponse] = useState<VenueJson | null>(null)
+
+    useEffect(()=>{
+        const fetchData = async () => {
+            const venues = await getVenues()
+            setVenueResponse(venues)
+        }
+        fetchData()
+    },[])
     const compareReducer = (compareList:Map<string,number>,action:{type:string,venueName:string,value:number}) => {
         const newState = new Map(compareList)
     
@@ -34,18 +46,16 @@ export default function CarPanel(){
         ["The Bloom Pavilion", 0]
     ]))
 
-    const mockData = [
-        {vid:"001" , name : "The Bloom Pavilion" , img : "/img/RomacePavilion.jpg" , description : "wedding hall with antique style of decoration"},
-        {vid:"002" , name : "Spark Space" , img : "/img/ConcertHall.jpg", description :"conference hall for concert, show and musical entertainment" },
-        {vid:"003" , name : "The Grand Table" , img : "/img/DinnerMate.jpg" , description : "restaurant venue for big group dinner" }
-    ]
+    if(!venueResponse){
+        return (<p>venue Panel is Loading</p>)
+    }
     return (
         <div>
             <div style={{margin:"20px",display:"flex",flexDirection:"row",flexWrap:"wrap",justifyContent:"space-around",alignContent:"space-around"}}>
             {
-                mockData.map((venueItem)=>(
-                    <Link key = {venueItem.vid} href={`/venue/${venueItem.vid}`} className='w-1/5'>
-                        <Card venueName={venueItem.name} imgSrc = {venueItem.img} venueDes={venueItem.description}
+                venueResponse.data.map((venueItem:VenueItem)=>(
+                    <Link key = {venueItem.id} href={`/venue/${venueItem.id}`} className='w-1/5'>
+                        <Card venueName={venueItem.name} imgSrc = {venueItem.picture} venueDes={venueItem.address}
                         onCompare={(venue:string,value:number)=>{
                         dispatchCompare({type:'set',venueName:venue,value:value})
                         }}
